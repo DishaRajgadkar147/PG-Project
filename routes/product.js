@@ -12,6 +12,7 @@ router.post('/add', upload.single('image'), (req, res) => {
     const { category_id, name, description, price, stock_quantity } = req.body
     const imageName = req.file.filename + '.jpg'
     const oldPath = req.file.path
+    
     const newPath = `productimages/${imageName}`
 
     fs.rename(oldPath, newPath, (err) => {
