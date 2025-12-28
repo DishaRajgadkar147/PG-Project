@@ -7,6 +7,7 @@ const {body,validationResult}=require('express-validator')
 const jwt=require('jsonwebtoken')
 const config=require('../utils/config')
 
+//Admin signin is done with email,password
 router.post('/admin/signin',(req,res)=>{
     const {email,password}=req.body;
     const sql="Select * from admin WHERE email=?";
@@ -60,10 +61,12 @@ router.post('/admin/signin',(req,res)=>{
 //            })
 //         })
 
+
+//Admin signup wher password should be atleast 8 characters where (1 Capital letter,1 small letter,1special character,1 numeric character)
 router.post('/signup', 
   body('email').isEmail().withMessage('Invalid email'),
   body('password')
-    .isLength({ min: 12 })
+    .isLength({ min: 8 })
     .matches(/[A-Z]/)
     .matches(/[a-z]/)
     .matches(/[0-9]/)
@@ -73,7 +76,7 @@ router.post('/signup',
     if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
 
     const { name,email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(password, 8);
 
     const sql = 'INSERT INTO admin (name,email, password) VALUES (?,?,?)';
     db.query(sql, [name,email, hashedPassword], (err, result) => {
@@ -85,6 +88,7 @@ router.post('/signup',
     });
 });
 
+//Admin can see all the accounts
 router.get('/',(req,res)=>{
     const sql=`Select * from admin`
     db.query(sql,(err,data)=>{
@@ -96,6 +100,7 @@ router.get('/',(req,res)=>{
     })
 })
 
+//Update email of admin
 router.put('/',(req,res)=>{
     const {admin_id,email}=req.body
     const sql=`Update admin SET email=? WHERE admin_id=?`
@@ -108,6 +113,7 @@ router.put('/',(req,res)=>{
     })
 })
 
+//Delete account of admin
 router.delete('/',(req,res)=>{
     const {admin_id}=req.body
     const sql=`Delete from admin WHERE admin_id=?`

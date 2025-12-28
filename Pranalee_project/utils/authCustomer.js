@@ -2,6 +2,7 @@ const jwt=require('jsonwebtoken')
 const result=require('./result')
 const config=require('./config')
 
+//Authorize customer token is created after signin
 function authorizeCustomer(req,res,next){
         const token=req.headers.token
         if(!token){

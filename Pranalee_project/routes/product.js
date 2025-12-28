@@ -8,6 +8,7 @@ const fs = require('fs')
 
 const upload = multer({ dest: 'productimages/' })
 
+//Only admin can add products 
 router.post('/add', upload.single('image'), (req, res) => {
     const { category_id, name, description, price, stock_quantity } = req.body
     const imageName = req.file.filename + '.jpg'
@@ -33,6 +34,7 @@ router.post('/add', upload.single('image'), (req, res) => {
     })
 })
 
+//Get all the products (list)
 router.get('/', (req, res) => {
     const sql = `SELECT name,description,price,image FROM product`
     db.query(sql, (err, data) => {
@@ -41,6 +43,7 @@ router.get('/', (req, res) => {
 })
 
 
+//Get products by category only for customer
 router.get('/getByCategory/:category_id',(req,res)=>{
     const category_id=req.params.category_id
     const sql=`Select name,description,price,image from product WHERE category_id=?`

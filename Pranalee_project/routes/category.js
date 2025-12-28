@@ -4,6 +4,7 @@ const result=require('../utils/result')
 
 const router=express.Router()
 
+//Adding category (Admin)
 router.post('/addCategory',(req,res)=>{
     const {category_id,category_name,description}=req.body
     const sql=`Insert into category(category_id,category_name,description) values(?,?,?)`    
@@ -12,6 +13,7 @@ router.post('/addCategory',(req,res)=>{
     })
 })
 
+//Displaying all categories to admin
 router.get('/',(req,res)=>{
     const sql=`Select * from category`
     db.query(sql,(err,data)=>{
@@ -19,6 +21,7 @@ router.get('/',(req,res)=>{
     })
 })
 
+//displaying category by category_id
 router.get('/getByCategory',(req,res)=>{
     const category_id=req.body.category_id
     const sql=`Select * from category WHERE category_id=?`
@@ -32,6 +35,7 @@ router.get('/getByCategory',(req,res)=>{
     })
 })
 
+//Admin can update the category and it's description
 router.put('/updateCategory',(req,res)=>{
     const {category_id,category_name,description}=req.body
     const sql=`Update category SET category_name=?,description=? WHERE category_id=?`

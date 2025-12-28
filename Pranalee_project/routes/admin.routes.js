@@ -23,4 +23,20 @@ router.get('/orders',(req,res)=>{
         res.send(result.createResult(err,data))
     })
 })
+
+//Delete customer 
+router.delete('/',(req,res)=>{
+    const customer_id=req.body.customer_id
+    // const selectSql="Select * from customer where customer_id=?"
+      const sql="Delete from customer where customer_id=?"
+    db.query(sql,[customer_id],(err,result)=>{
+        if(err){
+            res.status(500).send('Server Error')
+        }
+        if(result.affectedRows===0){
+            return res.status(404).send('Customer not Found')
+        }
+        return res.status(200).send('Customer Deleted Successfully')
+    })
+})
 module.exports=router
