@@ -1,33 +1,25 @@
-const jwt=require('jsonwebtoken')
-const result=require('./result')
-const config=require('./config')
+const jwt = require("jsonwebtoken")
+const config = require("./config")
 
-function authorizeAdmin(req,res,next){
-    const url=req.url
-    if(url=='/api/admin/admin/signin'||url=='/api/admin/signup'){
+module.exports = (req, res, next) => {
+  const authHeader = req.headers.authorization
+
+  if (!authHeader) {
+    return res.status(401).json({ error: "Token missing" })
+  }
+  const token = authHeader.split(" ")[1]
+
+  if (!token) {
+    return res.status(401).json({ error: "Invalid token format" })
+  }
+
+  try {
+    const decoded = jwt.verify(token, config.SECRET)
+
+    req.admin_id = decoded.admin_id
+
     next()
-    }
-    // else if(url=='/api/product/add'||req.method=='POST'){
-    //     next()
-    // }
-    // else if(url=='/api/category/addCategory'||req.method=='POST'){
-    //     next()
-    // }
-    else{
-        const token=req.headers.token
-        if(token){
-            try{
-                const payload=jwt.verify(token,config.SECRET)
-                req.admin_id=payload.admin_id
-                next()
-            }
-            catch(ex){
-                res.send(result.createResult('Invalid Token'))
-            }
-        }
-        else
-        res.send(result.createResult('Token is Missing'))
-    }
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid token" })
+  }
 }
-
-module.exports=authorizeAdmin

@@ -30,7 +30,7 @@ router.get('/getByCategory',(req,res)=>{
             res.status(500).send('DB Error')
         }
         else{
-            res.send(result.createResult(err,data))
+            res.send(result.createResult(null,data))
         }
     })
 })
@@ -56,7 +56,7 @@ router.delete('/deletebyid/:category_id',(req,res)=>{
     const sql=`delete from category where category_id=?`
     db.query(sql,[category_id],(err,result)=>{
         if(err){
-            res.status(500).send('DB Error')
+           return res.status(500).send('DB Error')
         }
         if(result.affectedRows===0){
             return res.status(404).send('Category not found')

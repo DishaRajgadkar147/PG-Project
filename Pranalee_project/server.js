@@ -1,31 +1,39 @@
-const express=require("express");
-const app=express();
+const express = require("express")
+const app = express()
+const cors = require("cors")
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
+}))
+
 app.use(express.json())
+app.use('/productimages', express.static('productimages'))
 
-app.use('/productimages', express.static('productimages'));
-const customerRoute=require('./routes/customer')
-const adminRoute=require('./routes/admin')
-const categoryRoute=require('./routes/category')
-const productRoute=require('./routes/product')
-const authorizeAdmin=require('./utils/authAdmin')
-const adminRoutes=require('./routes/admin.routes')
-const authorizeCustomer=require('./utils/authCustomer')
-const customerRoutes=require('./routes/customer.routes')
-const orderRoute=require('./routes/orders')
+// ROUTES
+const customerRoute = require('./routes/customer')
+const customerAuthRoutes = require('./routes/customer.routes')
+const adminRoute = require('./routes/admin')
+const adminRoutes = require('./routes/admin.routes')
+const categoryRoute = require('./routes/category')
+const productRoute = require('./routes/product')
+const orderRoute = require('./routes/orders')
 
+const authorizeCustomer = require('./utils/authCustomer')
+const authorizeAdmin = require('./utils/authAdmin')
 
-app.use("/api/customer",customerRoute)
-app.use("/api/customer/signin",customerRoutes)
-app.use("/api/customer/signup",customerRoutes)
-app.use("/api/product",productRoute)
+// PUBLIC
+app.use("/api/customer", customerAuthRoutes) // signin/signup
+app.use("/api/admin", adminRoutes)
+app.use("/api/category", categoryRoute)
+app.use("/api/product", productRoute)
 
-app.use("/api/order",authorizeCustomer,orderRoute)
-app.use("/api/customer",authorizeCustomer,customerRoutes)
-app.use("/api/customer",customerRoutes)
-app.use("/api/admin",adminRoute)
-app.use("/api/admin",adminRoutes)
-app.use("/api/category",categoryRoute)
+// PROTECTED
+app.use("/api/customer", authorizeCustomer, customerRoute)
+app.use("/api/order", authorizeCustomer, orderRoute)
+app.use("/api/admin/protected", authorizeAdmin, adminRoute)
 
-app.use("/api/order",orderRoute)
-
-app.listen(4000,()=> console.log("Server started at port 4000"))
+app.listen(4000, () => {
+  console.log("Server started at port 4000")
+})
