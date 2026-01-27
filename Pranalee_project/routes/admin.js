@@ -2,7 +2,7 @@ const express=require("express")
 const router=express.Router();
 const db=require("../utils/db")
 const result=require("../utils/result")
-const authAdmin=require('../utils/authAdmin')
+
 
 //Admin signin is done with email,password
 
@@ -60,11 +60,111 @@ router.get('/dashboard/summary',(req,res)=>{
     })
 })
 
-router.get('/orders',(req,res)=>{
-    const sql=`Select order_id,customer_id,order_date,total_amount,status from orders`
-    db.query(sql,(err,data)=>{
-       return res.send(result.createResult(err,data))
+// router.get('/orders',(req,res)=>{
+//     const sql=`Select order_id,customer_id,order_date,total_amount,status from orders`
+//     db.query(sql,(err,data)=>{
+//        return res.send(result.createResult(err,data))
+//     })
+// })
+
+// ADMIN: Get order items by order_id
+router.get('/orders/:order_id', (req, res) => {
+    const { order_id } = req.params
+  
+    const sql = `
+      SELECT
+        p.product_id,
+        p.name,
+        p.image,
+        oi.quantity,
+        oi.price
+      FROM order_items oi
+      JOIN product p ON oi.product_id = p.product_id
+      WHERE oi.order_id = ?
+    `
+  
+    db.query(sql, [order_id], (err, data) => {
+      res.send(result.createResult(err, data))
     })
+  })
+  
+  // ADMIN: Get all orders
+router.get('/orders', (req, res) => {
+    const sql = `
+      SELECT 
+        o.order_id,
+        o.order_date,
+        o.total_amount,
+        o.status,
+        c.name AS customer_name,
+        c.email
+      FROM orders o
+      JOIN customer c ON o.customer_id = c.customer_id
+      ORDER BY o.order_date DESC
+    `
+  
+    db.query(sql, (err, data) => {
+      res.send(result.createResult(err, data))
+    })
+  })
+
+  // ADMIN: Get order items by order_id
+router.get('/orders/:order_id', (req, res) => {
+    const { order_id } = req.params
+  
+    const sql = `
+      SELECT
+        p.product_id,
+        p.name,
+        p.image,
+        oi.quantity,
+        oi.price
+      FROM order_items oi
+      JOIN product p ON oi.product_id = p.product_id
+      WHERE oi.order_id = ?
+    `
+  
+    db.query(sql, [order_id], (err, data) => {
+      res.send(result.createResult(err, data))
+    })
+  })
+  
+  // ADMIN: Update order status
+router.put('/orders/status', (req, res) => {
+    const { order_id, status } = req.body
+  
+    const sql = `UPDATE orders SET status=? WHERE order_id=?`
+  
+    db.query(sql, [status, order_id], (err, resultData) => {
+      if (err) {
+        return res.status(500).send(result.createResult(err))
+      }
+  
+      if (resultData.affectedRows === 0) {
+        return res.status(404).send('Order not found')
+      }
+  
+      res.send(result.createResult(null, 'Order status updated'))
+    })
+  })
+  
+  // ADMIN: Get low stock products
+router.get('/low-stock', (req, res) => {
+  const sql = `
+    SELECT 
+      product_id,
+      name,
+      image,
+      price,
+      stock_quantity
+    FROM product
+    WHERE stock_quantity <= 10
+    ORDER BY stock_quantity ASC
+  `
+
+  db.query(sql, (err, data) => {
+    res.send(result.createResult(err, data))
+  })
 })
 
 //Delete account of admin

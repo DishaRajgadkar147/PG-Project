@@ -35,20 +35,58 @@ router.post('/add', upload.single('image'), (req, res) => {
 })
 
 //Get all the products (list)
-router.get('/', (req, res) => {
-    const sql = `SELECT product_id,name,description,price,image,stock_quantity FROM product`
-    db.query(sql, (err, data) => {
-       return res.send(result.createResult(err, data))
-    })
-})
+router.get("/", (req, res) => {
+    const sql = "SELECT * FROM product";
+  
+    db.query(sql, (err, result) => {
+      if (err) {
+        return res.json({ status: "error", error: err });
+      }
+      res.json({ status: "success", data: result });
+    });
+  });
 
+  // GET /product/active
+router.get("/active", (req, res) => {
+    const sql = "SELECT * FROM product WHERE is_active = 1";
+  
+    db.query(sql, (err, result) => {
+      if (err) {
+        return res.json({ status: "error", error: err });
+      }
+      res.json({ status: "success", data: result });
+    });
+  });
+  
+// PUT /product/disable/:id
+router.put("/disable/:id", (req, res) => {
+    const { id } = req.params;
+  
+    const sql = "UPDATE product SET is_active = 0 WHERE product_id = ?";
+  
+    db.query(sql, [id], (err, result) => {
+      if (err) {
+        return res.json({ status: "error", error: err });
+      }
+      res.json({ status: "success" });
+    });
+  });
+  
+  // PUT /product/enable/:id
+router.put("/enable/:id", (req, res) => {
+    const { id } = req.params;
+  
+    const sql = "UPDATE product SET is_active = 1 WHERE product_id = ?";
+  
+    db.query(sql, [id], (err, result) => {
+      if (err) {
+        return res.json({ status: "error", error: err });
+      }
+      res.json({ status: "success" });
+    });
+  });
+  
 //get products by product_id
-router.get('/:product_id', (req, res) => {
-    const sql = `SELECT * FROM product WHERE product_id=?`
-    db.query(sql, [req.params.product_id], (err, data) => {
-      res.send(result.createResult(err, data))
-    })
-  })
 
   //update the products
   router.put('/update/:product_id', upload.single('image'), (req, res) => {
@@ -79,24 +117,60 @@ router.get('/:product_id', (req, res) => {
       res.send(result.createResult(err, data))
     })
   })
-  //delete products
-  router.delete('/delete/:product_id', (req, res) => {
-    const sql = `DELETE FROM product WHERE product_id=?`
-    db.query(sql, [req.params.product_id], (err, data) => {
-      res.send(result.createResult(err, data))
+  //delete product
+router.delete("/delete/:id", (req, res) => {
+    const sql = "DELETE FROM product WHERE product_id=?"
+    db.query(sql, [req.params.id], (err, resultData) => {
+      if (err) return res.send(result.createResult(err))
+      if (resultData.affectedRows === 0)
+        return res.send(result.createResult({ message: "Product not found" }))
+      return res.send(result.createResult(null, "Product deleted"))
     })
   })
   
+  // SEARCH PRODUCTS (Customer)
+  // ✅ SEARCH MUST BE FIRST
+router.get('/search', (req, res) => {
+  const { q } = req.query
+
+  if (!q || q.trim() === "") {
+    return res.send(result.createResult(null, []))
+  }
+
+  const keyword = `%${q.trim()}%`
+
+  const sql = `
+    SELECT product_id, category_id, name, description, price, image, stock_quantity
+    FROM product
+    WHERE name LIKE ? OR description LIKE ?
+  `
+
+  db.query(sql, [keyword, keyword], (err, data) => {
+    res.send(result.createResult(err, data))
+  })
+})
+
+
+// ⬇️ KEEP ID ROUTES BELOW
+router.get('/:product_id', (req, res) => {
+  const sql = `SELECT * FROM product WHERE product_id=?`
+  db.query(sql, [req.params.product_id], (err, data) => {
+    res.send(result.createResult(err, data))
+  })
+})
 
 //Get products by category only for customer
-router.get('/getByCategory/:category_id',(req,res)=>{
-    const category_id=req.params.category_id
-    const sql=`Select product_id,name,description,price,image,stock_quantity from product WHERE category_id=?`
-    db.query(sql,[category_id],(err,data)=>{
-        if(err)
-            return res.status(500).send('DB Error')
-       return res.send({status:'success',data})
-    })
+// GET /api/product/active/category/:category_id
+router.get("/active/category/:category_id", (req, res) => {
+  const sql = `
+    SELECT product_id, name, description, price, image, stock_quantity
+    FROM product
+    WHERE category_id = ? AND is_active = 1
+  `
+  db.query(sql, [req.params.category_id], (err, data) => {
+    if (err) return res.status(500).send("DB Error")
+    res.json({ status: "success", data })
+  })
 })
 
 
